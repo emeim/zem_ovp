@@ -1,0 +1,89 @@
+@AbapCatalog.sqlViewName: 'ZEMOVP'
+@AbapCatalog.compiler.compareFilter: true
+@AbapCatalog.preserveKey: true
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'Overview Page Training'
+
+@OData.publish: true
+
+@UI.headerInfo: {
+    typeNamePlural: 'Sales Orders',
+    imageUrl: 'imageLink',
+    typeName: 'Sales Order',
+    title: { label: 'Order ID', value: 'sales_order_id' },
+    description: { label: 'Customer', value: 'company_name' }
+}
+
+@UI.chart: [{
+    qualifier: 'ordNetChart',
+    title: 'Sales Orders',
+    chartType: #SCATTER,
+    dimensions: ['sales_order_id'],
+    measures: ['net_amount', 'tax_amount'],
+    dimensionAttributes: { dimension: 'sales_order_id', role: #CATEGORY },
+    measureAttributes: [{measure: 'net_amount', role: #AXIS_1}, {measure: 'tax_amount', role: #AXIS_1}]
+}]
+
+@UI.presentationVariant: [{qualifier: 'top5Changed', maxItems: '5', sortOrder.by: 'changed_at', sortOrder.direction: #DESC }]
+
+define view zem_ovp as select from sepm_cds_sales_order as so {
+  key so.sales_order_key,
+  @UI.selectionField: [{ position: 10 }]
+  @Consumption.semanticObject: 'Action'
+  @UI.identification: { type: #FOR_INTENT_BASED_NAVIGATION, semanticObjectAction: 'toappnavsample2', position: '10', label: 'Nav Sample' }
+  @UI.lineItem: [
+    { label: 'sales order', type: #FOR_INTENT_BASED_NAVIGATION, semanticObjectAction: 'toappnavsample', qualifier: 'tableCard'},
+    { position: '10', label: 'Sales Order', qualifier: 'tableCard' }
+  ]
+  so.sales_order_id,
+  so.created_by,
+  so.created_at,
+  so.changed_by,
+  so.changed_at,
+  so.note_guid,
+  so.currency_code,
+  so.gross_amount,
+  @UI.dataPoint: {
+    title: 'Net Amount',
+    criticalityCalculation: { 
+        improvementDirection: #TARGET,
+        deviationRangeLowValue: 1000,
+        toleranceRangeLowValue: 1500,
+        toleranceRangeHighValue: 7000,
+        deviationRangeHighValue: 15000
+    }
+  }
+  @UI.lineItem: { position: '30', label: 'Net Value', qualifier: 'tableCard', type: #AS_DATAPOINT }
+  so.net_amount,
+  so.tax_amount,
+ @UI.dataPoint:{title: 'Order Target Value', criticalityCalculation: {
+   improvementDirection: #MAXIMIZE,
+   toleranceRangeLowValue: 8000,
+   deviationRangeLowValue: 9000} 
+ }
+  1000.00 as myTarget,
+  so.lifecycle_status,
+  so.billing_status,
+  so.delivery_status,
+  so.buyer_guid,
+  so.customer,
+  so.items,
+  @UI.selectionField: [ { position: 20 } ]
+  @UI.lineItem: { position: '20', label: 'Customer', qualifier: 'tableCard' }
+  so.customer.company_name,
+  '/resources/sap/ui/core/mimes/logo/sap_50x26.png' as imageLink,
+  @UI.identification: { type: #WITH_URL, label: 'Customer Site', url: 'web_address', position: '20' }
+  so.customer.web_address,
+  @UI.fieldGroup: { groupLabel: 'Contact Details', label: 'Email', position: '10', qualifier: 'cusContact' }
+  so.customer.email_address,
+  @UI.fieldGroup: { groupLabel: 'Contact Details', label: 'Phone Number', position: '20', qualifier: 'cusContact' }
+  so.customer.phone_number
+} 
+  
+  
+  
+  
+  
+  
+
+
